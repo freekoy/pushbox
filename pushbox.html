@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>推箱子</title>
+</head>
+<style>
+.main {
+  width: 100px;
+  height: 100px;
+  border: 1px solid black;
+  position: relative;
+}
+.main div{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+}
+.box {
+  background: blue;
+}
+.wall {
+  background: gray;
+}
+.me {
+  border-radius: 100%;
+  background: pink;
+}
+.pos {
+  opacity:0.5;
+  background: orange;
+}
+.meandpos {
+  border-radius: 100%;
+  opacity:0.5;
+  background: orange;
+}
+</style>
+<body onkeyup="keyListener(event);">
+  <h1>推箱子</h1>
+  <div class="main">
+
+  </div>
+  <p>用上下左右箭头键来控制方向</p>
+</body>
+<script>
+  //0是路 1是墙 wall 2是箱子 3是目的地 4是人 5是箱子和目的地重合 7是人和目的地重合
+  //胜利条件 数组所以数 都无7 无3
+  //按键监听 按键分析有没有移动的可能 如果可能性一致 可以移动 改变数组 重新绘制
+  var arr = [[1,0,0,0,1],
+            [0,0,4,0,0],
+            [3,2,0,2,0],
+            [0,0,3,1,0],
+            [1,1,1,1,0]];
+  var main = document.getElementsByClassName('main')[0];
+  var man = [1,2];
+
+  function graw() {
+    success();
+    main.innerHTML = '';
+    for(var i = 0;i < arr.length;i++) {
+      for(var j = arr.length-1;j >= 0;j--) {
+        //console.(i,j,'arr ',arr[i][j]);
+        var div = document.createElement('div');
+        div.style.left = j * 20 + 'px';
+        div.style.top = i *20 + 'px';
+        switch(arr[i][j]) {
+          case 4:
+          div.className = 'me';
+          break;
+          case 1:
+          div.className = 'wall';
+          break;
+          case 2:
+          div.className = 'box';
+          break;
+          case 3:
+          div.className = 'pos';
+          break;
+          case 5:
+          div.className = 'box';
+          break;
+          case 7:
+          div.className = 'meandpos';
+          break;
+          default:
+        }
+        main.appendChild(div);
+      }
+    }
+  }
+
+  function success() {
+    var count = 0;
+    for(var i = 0;i < arr.length;i++) {
+      for(var j = arr.length-1;j >= 0;j--) {
+        if(arr[i][j] != 3 && arr[i][j] !=7) {
+          count++;
+          if(count == 25) {
+            //所有数都不存在3和7,就说明箱子和目标的重合了
+            alert('success!!!');
+          }
+        }
+        }
+      }
+    }
+
+  function move(a,b,c) {
+    var a,b,c;
+    a = a.toString();
+    if(b == undefined) {
+      b = '';
+    }else {
+      b = b.toString();
+    }
+    if(c == undefined) {
+      c = '';
+    }else {
+      c = c.toString();
+    }
+    var canmove = {
+      //可以移动的可能性 箱子后面有箱子 不能推动 自然不能移动 有墙挡住 也是不能移动的
+      400:'040',700:'340',40:'04',70:'34',
+      401:'041',701:'341',43:'07',
+      402:'042',702:'342',
+      403:'043',703:'343',
+      405:'045',705:'345',
+      420:'042',720:'342',
+      423:'045',723:'345',
+      430:'070',730:'370',
+      431:'071',731:'371',
+      432:'072',732:'372',
+      433:'073',733:'373',
+      435:'075',735:'375',
+      450:'072',750:'372',
+      453:'075',753:'375',
+    };
+    for(var key in canmove) {
+      if(a+b+c == key) {
+        a = canmove[key][0];
+        b = canmove[key][1];
+        c = canmove[key][2];
+        return [a,b,c];
+      }
+    }
+  }
+
+  var row = man[0];
+  var col = man[1];
+  function keyListener(event) {
+    //依据键来进行移动
+    //分支可能性太多 写if else if会很纠结 所以一次性全部列出来,用对应表的方式来判断
+    var n = event.keyCode;
+    var newarr = [];
+    switch(n) {
+      case 37:
+      if(arr[row][col-2] == undefined) {
+         newarr = move(arr[row][col],arr[row][col-1]);
+      }else {
+        newarr = move(arr[row][col],arr[row][col-1],arr[row][col-2]);
+        arr[row][col-2] = parseInt(newarr[2]);
+      }
+      arr[row][col] = parseInt(newarr[0]);
+      arr[row][col-1] = parseInt(newarr[1]);
+      man[1] = col-1;
+      break;
+      case 38:
+      if(arr[row-2] == undefined) {
+         newarr = move(arr[row][col],arr[row-1][col]);
+      }else{
+        newarr = move(arr[row][col],arr[row-1][col],arr[row-2][col]);
+        arr[row-2][col] = parseInt(newarr[2]);
+      }
+      arr[row][col] = parseInt(newarr[0]);
+      arr[row-1][col] = parseInt(newarr[1]);
+      man[0] = row-1;
+      break;
+      case 40:
+      if(arr[row+2] == undefined) {
+         newarr = move(arr[row][col],arr[row+1][col]);
+      }else{
+        newarr = move(arr[row][col],arr[row+1][col],arr[row+2][col]);
+        arr[row+2][col] = parseInt(newarr[2]);
+      }
+      arr[row][col] = parseInt(newarr[0]);
+      arr[row+1][col] = parseInt(newarr[1]);
+      man[0] = row+1;
+      break;
+      case 39:
+      if(arr[row][col+2] == undefined) {
+         newarr = move(arr[row][col],arr[row][col+1]);
+      }else{
+        newarr = move(arr[row][col],arr[row][col+1],arr[row][col+2]);
+        arr[row][col+2] = parseInt(newarr[2]);
+      }
+      arr[row][col] = parseInt(newarr[0]);
+      arr[row][col+1] = parseInt(newarr[1]);
+      man[1] = col+1;
+      break;
+      default:
+    }
+    row = man[0];
+    col = man[1];
+    graw();
+  }
+
+  graw();
+</script>
+</html>
